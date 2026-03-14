@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: kids-castle-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    disk:
+      name: pb-data
+      mountPath: /pb/pb_data
+      sizeGB: 5
+    envVars:
+      - key: PB_ENCRYPTION_KEY
+        generateValue: true
+    healthCheckPath: /api/health
+    autoDeploy: true
