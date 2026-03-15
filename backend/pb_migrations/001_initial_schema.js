@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate(
-  (db) => {
+  (app) => {
     // ─── academic_years ───────────────────────────────────────────────────
     const academicYears = new Collection({
       id: "academic_years",
@@ -13,7 +13,7 @@ migrate(
         { name: "is_current", type: "bool",   required: false },
       ],
     });
-    db.saveCollection(academicYears);
+    app.save(academicYears);
 
     // ─── classes ──────────────────────────────────────────────────────────
     const classes = new Collection({
@@ -26,7 +26,7 @@ migrate(
         { name: "order",        type: "number", required: false },
       ],
     });
-    db.saveCollection(classes);
+    app.save(classes);
 
     // ─── divisions ────────────────────────────────────────────────────────
     const divisions = new Collection({
@@ -38,7 +38,7 @@ migrate(
         { name: "name",     type: "select",   required: true, options: { values: ["A","B","C","D","E"], maxSelect: 1 } },
       ],
     });
-    db.saveCollection(divisions);
+    app.save(divisions);
 
     // ─── students ─────────────────────────────────────────────────────────
     const students = new Collection({
@@ -67,7 +67,7 @@ migrate(
         { name: "academic_year_id", type: "relation", required: false, options: { collectionId: "academic_years", maxSelect: 1 } },
       ],
     });
-    db.saveCollection(students);
+    app.save(students);
 
     // ─── attendance ───────────────────────────────────────────────────────
     const attendance = new Collection({
@@ -83,7 +83,7 @@ migrate(
         { name: "academic_year_id", type: "relation", required: false, options: { collectionId: "academic_years", maxSelect: 1 } },
       ],
     });
-    db.saveCollection(attendance);
+    app.save(attendance);
 
     // ─── attendance_sessions ──────────────────────────────────────────────
     const attendanceSessions = new Collection({
@@ -99,7 +99,7 @@ migrate(
         { name: "total_absent",  type: "number",   required: false },
       ],
     });
-    db.saveCollection(attendanceSessions);
+    app.save(attendanceSessions);
 
     // ─── subjects ─────────────────────────────────────────────────────────
     const subjects = new Collection({
@@ -116,7 +116,7 @@ migrate(
         { name: "order",        type: "number",   required: false },
       ],
     });
-    db.saveCollection(subjects);
+    app.save(subjects);
 
     // ─── exams ────────────────────────────────────────────────────────────
     const exams = new Collection({
@@ -133,7 +133,7 @@ migrate(
         { name: "is_published",     type: "bool",     required: false },
       ],
     });
-    db.saveCollection(exams);
+    app.save(exams);
 
     // ─── question_papers ──────────────────────────────────────────────────
     const questionPapers = new Collection({
@@ -153,7 +153,7 @@ migrate(
         { name: "tags",             type: "json",     required: false },
       ],
     });
-    db.saveCollection(questionPapers);
+    app.save(questionPapers);
 
     // ─── exam_marks ───────────────────────────────────────────────────────
     const examMarks = new Collection({
@@ -171,7 +171,7 @@ migrate(
         { name: "entered_by",    type: "relation", required: false, options: { collectionId: "_pb_users_auth_", maxSelect: 1 } },
       ],
     });
-    db.saveCollection(examMarks);
+    app.save(examMarks);
 
     // ─── fee_structures ───────────────────────────────────────────────────
     const feeStructures = new Collection({
@@ -188,7 +188,7 @@ migrate(
         { name: "description",      type: "text",     required: false },
       ],
     });
-    db.saveCollection(feeStructures);
+    app.save(feeStructures);
 
     // ─── fee_records ──────────────────────────────────────────────────────
     const feeRecords = new Collection({
@@ -212,7 +212,7 @@ migrate(
         { name: "remarks",           type: "text",     required: false },
       ],
     });
-    db.saveCollection(feeRecords);
+    app.save(feeRecords);
 
     // ─── report_cards ─────────────────────────────────────────────────────
     const reportCards = new Collection({
@@ -234,12 +234,12 @@ migrate(
         { name: "generated_at",           type: "date",     required: false },
       ],
     });
-    db.saveCollection(reportCards);
+    app.save(reportCards);
 
-    $app.logger().info("Initial schema migration completed successfully");
+    app.logger().info("Initial schema migration completed successfully");
   },
   // ─── Down ───────────────────────────────────────────────────────────────
-  (db) => {
+  (app) => {
     const collections = [
       "report_cards", "fee_records", "fee_structures", "exam_marks",
       "question_papers", "exams", "subjects", "attendance_sessions",
@@ -247,8 +247,8 @@ migrate(
     ];
     collections.forEach((name) => {
       try {
-        const col = db.findCollectionByNameOrId(name);
-        db.deleteCollection(col);
+        const col = app.findCollectionByNameOrId(name);
+        app.delete(col);
       } catch (_) {}
     });
   }

@@ -7,12 +7,14 @@
  */
 
 // ─── Grade Calculation on Marks Save ───────────────────────────────────────
-onRecordBeforeCreateRequest((e) => {
+onRecordCreateRequest((e) => {
   calculateGrade(e.record);
+  e.next();
 }, "exam_marks");
 
-onRecordBeforeUpdateRequest((e) => {
+onRecordUpdateRequest((e) => {
   calculateGrade(e.record);
+  e.next();
 }, "exam_marks");
 
 function calculateGrade(record) {
@@ -41,12 +43,14 @@ function calculateGrade(record) {
 }
 
 // ─── Auto-Generate Report Card Summary After Marks Save ────────────────────
-onRecordAfterCreateRequest((e) => {
+onRecordAfterCreateSuccess((e) => {
   generateReportCardSummary(e.record);
+  e.next();
 }, "exam_marks");
 
-onRecordAfterUpdateRequest((e) => {
+onRecordAfterUpdateSuccess((e) => {
   generateReportCardSummary(e.record);
+  e.next();
 }, "exam_marks");
 
 function generateReportCardSummary(marksRecord) {

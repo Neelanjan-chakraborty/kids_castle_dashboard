@@ -50,7 +50,7 @@ cronAdd("daily_teacher_attendance_init", "0 6 * * *", () => {
 });
 
 // ─── User Creation: Set Default Role ─────────────────────────────────────
-onRecordBeforeCreateRequest((e) => {
+onRecordCreateRequest((e) => {
   const record = e.record;
   // Default role to "staff" if not set
   if (!record.getString("role")) {
@@ -60,12 +60,16 @@ onRecordBeforeCreateRequest((e) => {
   if (record.get("is_active") === null || record.get("is_active") === undefined) {
     record.set("is_active", true);
   }
+  e.next();
 }, "_pb_users_auth_");
 
 // ─── Staff Permissions: Ensure Record Exists on User Creation ─────────────
-onRecordAfterCreateRequest((e) => {
+onRecordAfterCreateSuccess((e) => {
   const user = e.record;
-  if (user.getString("role") !== "staff") return;
+  if (user.getString("role") !== "staff") {
+    e.next();
+    return;
+  }
 
   try {
     const col = $app.dao().findCollectionByNameOrId("staff_permissions");
@@ -77,17 +81,25 @@ onRecordAfterCreateRequest((e) => {
   } catch (err) {
     $app.logger().error(`Failed to create staff_permissions for ${user.id}: ${err}`);
   }
+
+  e.next();
 }, "_pb_users_auth_");
 
 // ─── Access Control: Teacher can only update own class attendance ──────────
-onRecordBeforeUpdateRequest((e) => {
-  const adminId = e.httpContext.get("authRecord")?.getId?.();
-  if (!adminId) return; // Unauthenticated — PocketBase rules handle this
+onRecordUpdateRequest((e) => {
+  const adminId = e.auth?.id;
+  if (!adminId) {
+    e.next();
+    return; // Unauthenticated — PocketBase rules handle this
+  }
 
   let actor;
   try {
     actor = $app.dao().findRecordById("_pb_users_auth_", adminId);
-  } catch (_) { return; }
+  } catch (_) {
+    e.next();
+    return;
+  }
 
   const role = actor.getString("role");
 
@@ -95,7 +107,10 @@ onRecordBeforeUpdateRequest((e) => {
   if (role === "teacher") {
     const record = e.record;
     const studentId = record.getString("student_id");
-    if (!studentId) return;
+    if (!studentId) {
+      e.next();
+      return;
+    }
 
     try {
       const student = $app.dao().findRecordById("students", studentId);
@@ -118,4 +133,6 @@ onRecordBeforeUpdateRequest((e) => {
       // Student not found - let through, other validations will catch it
     }
   }
+
+  e.next();
 }, "attendance");

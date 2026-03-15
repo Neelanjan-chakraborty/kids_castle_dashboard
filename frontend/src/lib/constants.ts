@@ -47,3 +47,5 @@ export const EXAM_TYPES = [
   { value: 'internal',    label: 'Internal Assessment' },
   { value: 'other',       label: 'Other' },
 ]
+
+export const FEE_TYPES = ['tuition', 'transport', 'activity', 'annual', 'exam', 'other']

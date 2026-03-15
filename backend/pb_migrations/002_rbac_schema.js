@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate(
-  (db) => {
+  (app) => {
     // ─── school_branches ──────────────────────────────────────────────────
     const branches = new Collection({
       id: "school_branches",
@@ -17,7 +17,7 @@ migrate(
         { name: "logo",        type: "file",   required: false, options: { maxSelect: 1, mimeTypes: ["image/jpeg","image/png","image/webp"] } },
       ],
     });
-    db.saveCollection(branches);
+    app.save(branches);
 
     // ─── teacher_assignments ──────────────────────────────────────────────
     // Tracks which teacher is assigned to which class/division/subject
@@ -35,7 +35,7 @@ migrate(
         { name: "assigned_by",      type: "relation", required: false, options: { collectionId: "_pb_users_auth_", maxSelect: 1 } },
       ],
     });
-    db.saveCollection(teacherAssignments);
+    app.save(teacherAssignments);
 
     // ─── teacher_attendance ───────────────────────────────────────────────
     const teacherAttendance = new Collection({
@@ -52,7 +52,7 @@ migrate(
         { name: "remarks",    type: "text",     required: false },
       ],
     });
-    db.saveCollection(teacherAttendance);
+    app.save(teacherAttendance);
 
     // ─── staff_permissions ────────────────────────────────────────────────
     const staffPermissions = new Collection({
@@ -66,15 +66,15 @@ migrate(
         { name: "notes",        type: "text",     required: false },
       ],
     });
-    db.saveCollection(staffPermissions);
+    app.save(staffPermissions);
 
-    $app.logger().info("RBAC schema migration completed");
+    app.logger().info("RBAC schema migration completed");
   },
-  (db) => {
+  (app) => {
     ["staff_permissions", "teacher_attendance", "teacher_assignments", "school_branches"].forEach((name) => {
       try {
-        const col = db.findCollectionByNameOrId(name);
-        db.deleteCollection(col);
+        const col = app.findCollectionByNameOrId(name);
+        app.delete(col);
       } catch (_) {}
     });
   }

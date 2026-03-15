@@ -8,7 +8,7 @@
  */
 
 // ─── Before Create: Set Admission Number and Roll Number ───────────────────
-onRecordBeforeCreateRequest((e) => {
+onRecordCreateRequest((e) => {
   const record = e.record;
   const year = new Date().getFullYear();
 
@@ -39,10 +39,12 @@ onRecordBeforeCreateRequest((e) => {
       record.set("roll_number", 1);
     }
   }
+
+  e.next();
 }, "students");
 
 // ─── After Create: Generate Fee Records ────────────────────────────────────
-onRecordAfterCreateRequest((e) => {
+onRecordAfterCreateSuccess((e) => {
   const student = e.record;
 
   let currentYear;
@@ -53,6 +55,7 @@ onRecordAfterCreateRequest((e) => {
     );
   } catch (_) {
     $app.logger().warn("No current academic year; skipping fee record generation");
+    e.next();
     return;
   }
 
@@ -65,7 +68,10 @@ onRecordAfterCreateRequest((e) => {
     0
   );
 
-  if (feeStructures.length === 0) return;
+  if (feeStructures.length === 0) {
+    e.next();
+    return;
+  }
 
   const feeCollection = $app.dao().findCollectionByNameOrId("fee_records");
   const nowYear = new Date().getFullYear();
@@ -110,10 +116,11 @@ onRecordAfterCreateRequest((e) => {
   });
 
   $app.logger().info(`Fee records generated for student ${student.id}`);
+  e.next();
 }, "students");
 
 // ─── Before Fee Record Update: Recalculate Status ──────────────────────────
-onRecordBeforeUpdateRequest((e) => {
+onRecordUpdateRequest((e) => {
   const record = e.record;
   const amountDue = record.getFloat("amount_due");
   const amountPaid = record.getFloat("amount_paid");
@@ -127,4 +134,6 @@ onRecordBeforeUpdateRequest((e) => {
     record.set("status", "partial");
   }
   // Don't override "overdue" back to "pending" in hook — let cron handle that
+
+  e.next();
 }, "fee_records");
